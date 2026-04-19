@@ -79,15 +79,7 @@ jobs:
           print("✅ Secrets injected into config.json")
           EOF
 
-      # ── 6. Decode resume ──────────────────────────────────────────
-      - name: Decode resume PDF from secret
-        env:
-          RESUME_PDF_BASE64: ${{ secrets.RESUME_PDF_BASE64 }}
-        run: |
-          echo "$RESUME_PDF_BASE64" | base64 -d > resume.pdf
-          echo "✅ resume.pdf decoded ($(wc -c < resume.pdf) bytes)"
-
-      # ── 7. Restore applied logs from previous runs ────────────────
+      # ── 6. Restore applied logs from previous runs ────────────────
       - name: Restore applied logs cache
         uses: actions/cache@v4
         with:
@@ -95,7 +87,7 @@ jobs:
           key: applied-logs-${{ github.ref_name }}
           restore-keys: applied-logs-
 
-      # ── 8. Run agent ──────────────────────────────────────────────
+      # ── 7. Run agent ──────────────────────────────────────────────
       - name: Run Multi-Platform Job Agent
         env:
           GEMINI_API_KEY:  ${{ secrets.GEMINI_API_KEY }}
@@ -106,7 +98,7 @@ jobs:
           sleep 2
           python agent_cloud.py
 
-      # ── 9. Save applied logs (persists between daily runs) ─────────
+      # ── 8. Save applied logs (persists between daily runs) ─────────
       - name: Save applied logs cache
         if: always()
         uses: actions/cache/save@v4
@@ -114,7 +106,7 @@ jobs:
           path: logs/
           key: applied-logs-${{ github.ref_name }}-${{ github.run_number }}
 
-      # ── 10. Upload logs as artifact (for viewing) ─────────────────
+      # ── 9. Upload logs as artifact (for viewing) ─────────────────
       - name: Upload logs as artifact
         if: always()
         uses: actions/upload-artifact@v4
