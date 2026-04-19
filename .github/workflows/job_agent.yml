@@ -1,0 +1,124 @@
+name: Multi-Platform Job Agent 🤖
+
+on:
+  schedule:
+    # 9:00 AM IST = 3:30 AM UTC
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+    inputs:
+      test_all_phases:
+        description: "Run all 3 phases at once (for testing)"
+        required: false
+        default: "false"
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 2. Python setup ────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ── 3. Chrome + ChromeDriver + Xvfb (ALL 3 required) ──────────
+      - name: Install Chrome, ChromeDriver and Xvfb
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y google-chrome-stable chromium-chromedriver xvfb
+          pip install webdriver-manager --quiet
+          echo "✅ Chrome version: $(google-chrome --version)"
+          echo "✅ ChromeDriver version: $(chromedriver --version)"
+
+      # ── 4. Dependencies ───────────────────────────────────────────
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      # ── 5. Inject secrets into config.json ───────────────────────
+      - name: Inject secrets into config.json
+        env:
+          LINKEDIN_EMAIL:        ${{ secrets.LINKEDIN_EMAIL }}
+          LINKEDIN_PASSWORD:     ${{ secrets.LINKEDIN_PASSWORD }}
+          INDEED_EMAIL:          ${{ secrets.INDEED_EMAIL }}
+          INDEED_PASSWORD:       ${{ secrets.INDEED_PASSWORD }}
+          INTERNSHALA_EMAIL:     ${{ secrets.INTERNSHALA_EMAIL }}
+          INTERNSHALA_PASSWORD:  ${{ secrets.INTERNSHALA_PASSWORD }}
+          FREELANCER_EMAIL:      ${{ secrets.FREELANCER_EMAIL }}
+          FREELANCER_PASSWORD:   ${{ secrets.FREELANCER_PASSWORD }}
+          NOTIFY_EMAIL:          ${{ secrets.NOTIFY_EMAIL }}
+          GMAIL_APP_PASSWORD:    ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          python - <<'EOF'
+          import json, os
+
+          with open("config.json") as f:
+              cfg = json.load(f)
+
+          cfg["platforms"]["linkedin"]["email"]       = os.environ["LINKEDIN_EMAIL"]
+          cfg["platforms"]["linkedin"]["password"]    = os.environ["LINKEDIN_PASSWORD"]
+          cfg["platforms"]["indeed"]["email"]         = os.environ["INDEED_EMAIL"]
+          cfg["platforms"]["indeed"]["password"]      = os.environ["INDEED_PASSWORD"]
+          cfg["platforms"]["internshala"]["email"]    = os.environ["INTERNSHALA_EMAIL"]
+          cfg["platforms"]["internshala"]["password"] = os.environ["INTERNSHALA_PASSWORD"]
+          cfg["platforms"]["freelancer"]["email"]     = os.environ["FREELANCER_EMAIL"]
+          cfg["platforms"]["freelancer"]["password"]  = os.environ["FREELANCER_PASSWORD"]
+          cfg["notifications"]["email"]               = os.environ["NOTIFY_EMAIL"]
+          cfg["notifications"]["gmail_app_password"]  = os.environ["GMAIL_APP_PASSWORD"]
+
+          with open("config.json", "w") as f:
+              json.dump(cfg, f, indent=2)
+
+          print("✅ Secrets injected into config.json")
+          EOF
+
+      # ── 6. Decode resume ──────────────────────────────────────────
+      - name: Decode resume PDF from secret
+        env:
+          RESUME_PDF_BASE64: ${{ secrets.RESUME_PDF_BASE64 }}
+        run: |
+          echo "$RESUME_PDF_BASE64" | base64 -d > resume.pdf
+          echo "✅ resume.pdf decoded ($(wc -c < resume.pdf) bytes)"
+
+      # ── 7. Restore applied logs from previous runs ────────────────
+      - name: Restore applied logs cache
+        uses: actions/cache@v4
+        with:
+          path: logs/
+          key: applied-logs-${{ github.ref_name }}
+          restore-keys: applied-logs-
+
+      # ── 8. Run agent ──────────────────────────────────────────────
+      - name: Run Multi-Platform Job Agent
+        env:
+          GEMINI_API_KEY:  ${{ secrets.GEMINI_API_KEY }}
+          TEST_ALL_PHASES: ${{ github.event.inputs.test_all_phases || 'false' }}
+          DISPLAY: ":99"
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 &
+          sleep 2
+          python agent_cloud.py
+
+      # ── 9. Save applied logs (persists between daily runs) ─────────
+      - name: Save applied logs cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: logs/
+          key: applied-logs-${{ github.ref_name }}-${{ github.run_number }}
+
+      # ── 10. Upload logs as artifact (for viewing) ─────────────────
+      - name: Upload logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-logs-${{ github.run_number }}
+          path: logs/
+          retention-days: 14

@@ -1,0 +1,63 @@
+{
+  "agent_start_date": "2026-04-19",
+
+  "resume_path": "resume.pdf",
+
+  "profile": {
+    "name":                "Sundhar A",
+    "phone":               "9629680985",
+    "experience_years":    2,
+    "current_location":    "Bangalore",
+    "preferred_locations": ["Bangalore", "Chennai", "Hyderabad", "Remote"],
+    "expected_salary_lpa": 10
+  },
+
+  "job_search": {
+    "keywords":       ["Software Developer", "Software Engineer", "Backend Developer", "Full Stack Developer", "Frontend Developer"],
+    "skills":         ["Angular", "AngularJs", "Java", "JavaScript", "SQL", "Git", "Spring", "SpringBoot", "System Design", "Microservices"],
+    "experience_min": 1,
+    "experience_max": 3
+  },
+
+  "platforms": {
+
+    "linkedin": {
+      "enabled":                  true,
+      "email":                    "LINKEDIN_EMAIL_FROM_SECRETS",
+      "password":                 "LINKEDIN_PASSWORD_FROM_SECRETS",
+      "experience_level":         "2",
+      "max_applications_per_day": 10
+    },
+
+    "indeed": {
+      "enabled":                  true,
+      "email":                    "INDEED_EMAIL_FROM_SECRETS",
+      "password":                 "INDEED_PASSWORD_FROM_SECRETS",
+      "max_applications_per_day": 10
+    },
+
+    "internshala": {
+      "enabled":                  true,
+      "email":                    "INTERNSHALA_EMAIL_FROM_SECRETS",
+      "password":                 "INTERNSHALA_PASSWORD_FROM_SECRETS",
+      "max_applications_per_day": 10,
+      "cover_letter":             "I am currently working as a Full Stack Developer at Capgemini with 2 years of hands-on experience building enterprise-grade applications. My core expertise includes Java, Spring, Spring Boot, Microservices architecture, and AWS cloud services, along with Angular on the frontend. I have worked on real-world production systems involving REST API design, service decomposition, and cloud deployments, which has given me strong problem-solving and delivery skills. I am confident that my technical background aligns well with the requirements of this role, and I am eager to bring the same level of quality and dedication to your team. I would love the opportunity to contribute meaningfully and grow further in this position."
+    },
+
+    "freelancer": {
+      "enabled":           true,
+      "email":             "FREELANCER_EMAIL_FROM_SECRETS",
+      "password":          "FREELANCER_PASSWORD_FROM_SECRETS",
+      "min_budget_usd":    50,
+      "max_bids_per_day":  8,
+      "bid_delivery_days": 10,
+      "bid_proposal":      "Hi, I am a Full Stack Developer with 2 years of professional experience at Capgemini, one of the world's leading IT companies. I specialize in Java, Spring Boot, Microservices, and AWS, and have hands-on experience delivering production-level backend systems and cloud-based solutions. On the frontend, I work with Angular to build clean and responsive user interfaces. I understand the importance of writing maintainable, well-documented code and delivering on time without compromising quality. I have worked in agile teams on complex enterprise projects, so I am comfortable handling requirements, timelines, and client expectations professionally. I would love to discuss your project in detail and show you how I can add real value. Feel free to reach out — happy to get started!"
+    }
+
+  },
+
+  "notifications": {
+    "email":              "NOTIFY_EMAIL_FROM_SECRETS",
+    "gmail_app_password": "GMAIL_APP_PASSWORD_FROM_SECRETS"
+  }
+}
