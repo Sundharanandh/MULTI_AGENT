@@ -29,18 +29,29 @@ jobs:
         with:
           python-version: "3.11"
 
-      # ── 3. Chrome + ChromeDriver + Xvfb (ALL 3 required) ──────────
-      - name: Install Chrome, ChromeDriver and Xvfb
+      # ── 3. Chrome + Xvfb ──────────────────────────────────────────
+      # Install only google-chrome-stable — webdriver-manager handles
+      # ChromeDriver automatically, so we do NOT install chromium-chromedriver
+      # (mixing both causes version mismatch crashes).
+      - name: Install Chrome and Xvfb
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y google-chrome-stable chromium-chromedriver xvfb
-          pip install webdriver-manager --quiet
-          echo "✅ Chrome version: $(google-chrome --version)"
-          echo "✅ ChromeDriver version: $(chromedriver --version)"
+          sudo apt-get install -y xvfb
+
+          # Install google-chrome-stable via official Google repo
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
+            >> /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y google-chrome-stable
+
+          echo "✅ Chrome: $(google-chrome --version)"
 
       # ── 4. Dependencies ───────────────────────────────────────────
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install webdriver-manager --quiet
 
       # ── 5. Inject secrets into config.json ───────────────────────
       - name: Inject secrets into config.json
@@ -93,6 +104,8 @@ jobs:
           GEMINI_API_KEY:  ${{ secrets.GEMINI_API_KEY }}
           TEST_ALL_PHASES: ${{ github.event.inputs.test_all_phases || 'false' }}
           DISPLAY: ":99"
+          # Cache webdriver-manager downloads between runs
+          WDM_LOCAL: "1"
         run: |
           Xvfb :99 -screen 0 1920x1080x24 &
           sleep 2
